@@ -1,0 +1,9 @@
+{
+  "name": "brief-agents",
+  "version": "0.1.0",
+  "description": "A subagent inherits none of your durable rules — not your CLAUDE.md, not your memory, not your installed-plugin nudges — so it can blindly violate one it never heard of. brief-agents scans all three layers into one compact ~/.claude/agent-briefing-index.md (auto-regenerated when the sources change) and nudges you to brief the subagent with it before delegating architecture or code work. A SessionStart hook + a skill with the procedure. Sibling to no-hidden-changes, measure-twice, audit-loose-ends.",
+  "author": { "name": "Heiko Brantsch" },
+  "homepage": "https://github.com/haiggoh/brief-agents",
+  "license": "MIT",
+  "keywords": ["skill", "hook", "subagents", "delegation", "briefing", "context", "rules", "sessions"]
+}
