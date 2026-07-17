@@ -26,9 +26,15 @@ brief it.
 rule layers, grouped by source:
 
 - **CLAUDE.md** — section headers + a one-line gist each (global and project-level).
-- **Memory** — the one-line entries already in `MEMORY.md`, behavioural (`feedback` /
-  `project`) first, each with the file to open for full detail. Skipped silently if no
-  memory index exists at the conventional path.
+- **Memory** — filtered to what a DELEGATED subagent actually needs, not a full MEMORY.md
+  dump: `feedback` entries (explicit behavioral corrections — exactly what stops a
+  subagent repeating a known mistake), plus `project` entries only when they describe a
+  plugin/tool/script/MCP the agent might interact with. `user` and `reference` entries,
+  and `project` entries that are really status logs (a migration report, a one-off
+  creative project), are dropped — they're about *you*, not a guardrail the agent needs.
+  Capped at a skimmable count with a "N more in MEMORY.md" pointer when trimmed — never a
+  silent truncation. Skipped (with a note) if no memory index exists at the conventional
+  path, or if nothing in it survives the filter.
 - **Installed-plugin rules** — the **literal nudge text** each plugin injects at
   SessionStart (falling back to its `plugin.json` description). This is the highest-value
   section: the actual rule wording, not a paraphrase.

@@ -132,6 +132,61 @@ def test_rank_memory_entries():
 
 
 # --------------------------------------------------------------------------
+# filter_memory_for_agents / cap_with_pointer (agent-relevance filtering)
+# --------------------------------------------------------------------------
+def test_filter_memory_for_agents():
+    print("filter_memory_for_agents")
+    entries = [
+        {"title": "A gotcha", "ref": "g.md", "gist": "FEEDBACK: do X not Y", "type": "feedback"},
+        {"title": "waypoints PROJECT", "ref": "w.md",
+         "gist": "published plugin haiggoh/waypoints, a SessionStart hook + skill",
+         "type": "project"},
+        {"title": "Machine migration restore", "ref": "m.md",
+         "gist": "new-MacBook restore complete; toolchain+venvs rebuilt", "type": "project"},
+        {"title": "Corporate wifi fingerprint", "ref": "wifi.md",
+         "gist": "REFERENCE: recognize P7S1-Corp SSID", "type": "reference"},
+        {"title": "Personal shorthand", "ref": "u.md",
+         "gist": "read 'wrap' as wrap up the session", "type": "user"},
+        {"title": "Untyped note", "ref": "n.md", "gist": "no type cue at all", "type": ""},
+    ]
+    kept = core.filter_memory_for_agents(entries)
+    titles = [e["title"] for e in kept]
+    check("A gotcha" in titles, "keeps feedback entries unconditionally")
+    check("waypoints PROJECT" in titles,
+          "keeps a project entry that names a plugin/hook/skill (tool-relevant)")
+    check("Machine migration restore" not in titles,
+          "drops a project entry that's really a status log (no tool keywords)")
+    check("Corporate wifi fingerprint" not in titles, "drops reference entries entirely")
+    check("Personal shorthand" not in titles, "drops user entries entirely")
+    check("Untyped note" not in titles, "drops untyped entries entirely")
+    check(len(kept) == 2, "exactly the 2 agent-relevant entries survive")
+    check(core.filter_memory_for_agents([]) == [], "empty input -> []")
+
+
+def test_cap_with_pointer():
+    print("cap_with_pointer")
+    entries = [{"n": i} for i in range(25)]
+    kept, pointer = core.cap_with_pointer(entries, 18, "~/.../MEMORY.md")
+    check(len(kept) == 18, "trims to the limit")
+    check(pointer is not None, "emits a pointer line when entries were dropped")
+    check("7 more" in pointer, "pointer states the exact drop count")
+    check("MEMORY.md" in pointer, "pointer names where to look for the rest")
+
+    small = [{"n": i} for i in range(5)]
+    kept2, pointer2 = core.cap_with_pointer(small, 18, "~/.../MEMORY.md")
+    check(len(kept2) == 5 and pointer2 is None,
+          "no pointer emitted when nothing was dropped (not a silent cap, just no cap)")
+
+    exact = [{"n": i} for i in range(18)]
+    kept3, pointer3 = core.cap_with_pointer(exact, 18, "x")
+    check(len(kept3) == 18 and pointer3 is None, "exact-limit count triggers no pointer")
+
+    one_over = [{"n": i} for i in range(19)]
+    _, pointer4 = core.cap_with_pointer(one_over, 18, "x")
+    check("1 more entry" in pointer4, "singular phrasing for exactly one dropped entry")
+
+
+# --------------------------------------------------------------------------
 # fingerprint / staleness
 # --------------------------------------------------------------------------
 def test_fingerprint():
@@ -252,14 +307,48 @@ def test_build_index():
             check("Proj rule" in txt, "includes project CLAUDE.md section header")
             check("no memory index" in txt.lower(), "memory absent -> skipped note, no crash")
 
-            # memory PRESENT
+            # memory PRESENT: mix of feedback / tool-relevant project / status-log project /
+            # reference / user, to prove the filter operates end-to-end through build_index.
             mem = os.path.join(home, "mem", "MEMORY.md")
             os.makedirs(os.path.dirname(mem))
-            open(mem, "w").write("# Memory Index\n- [Thing](t.md) — FEEDBACK: do X\n")
+            open(mem, "w").write(
+                "# Memory Index\n"
+                "- [Thing](t.md) — FEEDBACK: do X\n"
+                "- [Some Plugin](plug.md) — PROJECT: published plugin haiggoh/some-plugin, a hook\n"
+                "- [Migration log](mig.md) — PROJECT: new laptop restore complete, toolchain rebuilt\n"
+                "- [Wifi note](wifi.md) — REFERENCE: recognize the corp SSID\n"
+                "- [Shorthand](short.md) — read 'wrap' as wrap up\n"
+            )
             os.environ["BRIEF_AGENTS_MEMORY_INDEX_FILE"] = mem
             txt2 = core.build_index(cwd, home=home)
-            check("Thing" in txt2 and "t.md" in txt2, "includes memory entry + file pointer")
+            check("Thing" in txt2 and "t.md" in txt2, "includes feedback entry + file pointer")
+            check("Some Plugin" in txt2, "includes tool-relevant project entry")
+            check("Migration log" not in txt2, "drops status-log project entry (no tool cue)")
+            check("Wifi note" not in txt2, "drops reference entry entirely")
+            check("Shorthand" not in txt2, "drops user entry entirely")
             check("~/" in txt2, "paths shown with ~ for portability")
+
+            # memory PRESENT but nothing survives the filter -> explicit skip note, no crash
+            mem_empty = os.path.join(home, "mem2", "MEMORY.md")
+            os.makedirs(os.path.dirname(mem_empty))
+            open(mem_empty, "w").write("# Memory Index\n- [Wifi](w.md) — REFERENCE: some fact\n")
+            os.environ["BRIEF_AGENTS_MEMORY_INDEX_FILE"] = mem_empty
+            txt3 = core.build_index(cwd, home=home)
+            check("no feedback/tool-relevant-project entries" in txt3,
+                  "all-filtered-out memory index -> explicit skip note, not a blank section")
+
+            # cap-with-pointer fires when the filtered set exceeds MEMORY_AGENT_LIMIT
+            mem_big = os.path.join(home, "mem3", "MEMORY.md")
+            os.makedirs(os.path.dirname(mem_big))
+            body = "# Memory Index\n" + "".join(
+                "- [Fix %d](fix%d.md) — FEEDBACK: correction number %d\n" % (i, i, i)
+                for i in range(core.MEMORY_AGENT_LIMIT + 5))
+            open(mem_big, "w").write(body)
+            os.environ["BRIEF_AGENTS_MEMORY_INDEX_FILE"] = mem_big
+            txt4 = core.build_index(cwd, home=home)
+            check("5 more entries" in txt4, "cap-with-pointer surfaces the exact drop count")
+            check(txt4.count("FEEDBACK: correction number") == core.MEMORY_AGENT_LIMIT,
+                  "inlines exactly the capped count, not the full set")
         finally:
             for k in ("BRIEF_AGENTS_GLOBAL_CLAUDE_MD", "BRIEF_AGENTS_INSTALLED_PLUGINS_FILE",
                       "BRIEF_AGENTS_MEMORY_INDEX_FILE"):
@@ -276,6 +365,7 @@ def main():
     for fn in (test_scan_claude_md, test_extract_nudge_bash, test_extract_nudge_python,
                test_extract_nudge_fallback, test_extract_nudge_truncated_fragment,
                test_parse_memory_index, test_rank_memory_entries,
+               test_filter_memory_for_agents, test_cap_with_pointer,
                test_fingerprint, test_is_stale, test_load_installed_plugins,
                test_plugin_briefing_line, test_build_index, test_cwd_slug):
         fn()

@@ -161,6 +161,12 @@ def find_project_claude_mds(cwd):
 
 _MEM_TYPE_RE = re.compile(r"\btype[:=]\s*(user|feedback|project|reference)\b", re.I)
 
+# How many filtered (feedback + tool-relevant-project) memory entries to inline before
+# switching to a "N more — read the file" pointer. Picked to keep the section a skimmable
+# guardrail list rather than a second copy of MEMORY.md; NOT a silent cap — cap_with_pointer
+# always emits a pointer line when it trims, per the house no-silent-caps rule.
+MEMORY_AGENT_LIMIT = 18
+
 
 def parse_memory_index(text):
     """Parse the one-line entries out of a MEMORY.md index body.
@@ -206,6 +212,62 @@ def rank_memory_entries(entries):
     order — the output stays diff-friendly across regenerations."""
     rank = {"feedback": 0, "project": 1, "": 2, "user": 3, "reference": 4}
     return sorted(entries, key=lambda e: rank.get(e["type"], 2))
+
+
+_TOOL_ISH_RE = re.compile(
+    r"\bplugin\b|\bskill\b|\bhook\b|\bmcp\b|\bcli\b|\btool\b|\bscript\b", re.I)
+
+
+def _is_tool_relevant_project(entry):
+    """A `project` entry is worth keeping in the AGENT briefing only when it describes a
+    plugin/tool/script/MCP the delegated agent might itself interact with or be affected
+    by — the filtering signal the coordinator asked for is a judgment call layered on top
+    of the type cue we already infer, not a new parsing capability. We key off keywords
+    already visible in the title/gist (no extra reads): mentions of plugin/skill/hook/
+    mcp/cli/tool/script. A project entry that's really a status log (e.g. a migration
+    report, a photo-editing project, a ranking exercise) won't match and is dropped."""
+    blob = entry["title"] + " " + entry["gist"]
+    return bool(_TOOL_ISH_RE.search(blob))
+
+
+def filter_memory_for_agents(entries):
+    """Narrow the full MEMORY.md entry list to what a DELEGATED SUBAGENT actually needs to
+    avoid repeating a known mistake or violating a tool/plugin rule:
+
+      * type == "feedback"                       -> always kept (explicit behavioral
+                                                      corrections; exactly the guardrail
+                                                      a subagent needs).
+      * type == "project" AND tool-relevant       -> kept (describes a plugin/tool/script
+                                                      the agent might interact with).
+      * type == "project" but NOT tool-relevant   -> dropped (status logs, e.g. a machine
+                                                      migration report or a photo-editing
+                                                      project, carry no behavioral signal).
+      * type in ("user", "reference") or untyped  -> dropped entirely (about the user's
+                                                      personal setup/facts, not a guardrail
+                                                      a subagent needs to not violate).
+
+    Returns entries in the SAME relative order they were given (caller ranks first)."""
+    out = []
+    for e in entries:
+        if e["type"] == "feedback":
+            out.append(e)
+        elif e["type"] == "project" and _is_tool_relevant_project(e):
+            out.append(e)
+    return out
+
+
+def cap_with_pointer(entries, limit, pointer_path):
+    """Cap a list at `limit`, returning (kept, pointer_line_or_None).
+
+    No-silent-caps: truncation must always be SAID, never silent. When entries were
+    dropped, pointer_line names exactly how many and where to look for the rest; when
+    nothing was dropped, pointer_line is None (nothing to announce)."""
+    if len(entries) <= limit:
+        return entries, None
+    dropped = len(entries) - limit
+    pointer = "_(%d more entr%s in %s — read it directly if the task seems related)_" % (
+        dropped, "y" if dropped == 1 else "ies", pointer_path)
+    return entries[:limit], pointer
 
 
 # ---------------------------------------------------------------------------
@@ -424,21 +486,33 @@ def build_index(cwd, home=None, script_reader=read_text):
         lines.append("_(none found)_")
         lines.append("")
 
-    # --- Memory (defensive: may be absent) ---
-    lines.append("## Memory (situational facts / feedback / projects)")
+    # --- Memory (defensive: may be absent; filtered to behavioral guardrails only) ---
+    lines.append("## Memory (behavioral corrections + tool/plugin notes — not everything)")
     lines.append("")
     mem_path = memory_index_path(cwd, home)
     mem_entries = parse_memory_index(read_text(mem_path)) if os.path.exists(mem_path) else []
     if mem_entries:
         ranked = rank_memory_entries(mem_entries)
-        lines.append("From %s (behavioral entries first; full text at "
-                     "the cited file):" % _relpath(mem_path, home))
-        for e in ranked:
-            tag = ("[%s] " % e["type"]) if e["type"] else ""
-            detail = e["gist"] or ""
-            lines.append("- %s%s (%s)%s" % (
-                tag, e["title"], e["ref"], (" — " + detail) if detail else ""))
-        lines.append("")
+        relevant = filter_memory_for_agents(ranked)
+        if relevant:
+            kept, pointer = cap_with_pointer(relevant, MEMORY_AGENT_LIMIT, _relpath(mem_path, home))
+            lines.append(
+                "From %s, filtered to what a DELEGATED subagent needs — `feedback` entries "
+                "(explicit behavioral corrections) plus `project` entries about a plugin/tool/"
+                "script it might touch. `user`/`reference`/status-log entries are dropped here "
+                "(about you, not a guardrail); full list is in the file:" % _relpath(mem_path, home))
+            for e in kept:
+                tag = ("[%s] " % e["type"]) if e["type"] else ""
+                detail = e["gist"] or ""
+                lines.append("- %s%s (%s)%s" % (
+                    tag, e["title"], e["ref"], (" — " + detail) if detail else ""))
+            if pointer:
+                lines.append(pointer)
+            lines.append("")
+        else:
+            lines.append("_(memory index has no feedback/tool-relevant-project entries — "
+                         "skipped; see %s for everything else)_" % _relpath(mem_path, home))
+            lines.append("")
     else:
         lines.append("_(no memory index at the conventional path — skipped)_")
         lines.append("")
