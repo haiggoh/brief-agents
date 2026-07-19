@@ -55,9 +55,24 @@ Before calling the Agent/Workflow tool for **architecture or code** work, do **o
 Prefer pasting the specific relevant rules for a focused task (cheaper, sharper); point at
 the file for open-ended work where you can't predict what the subagent will touch.
 
-This is a **nudge, not an enforcement** — a hook cannot rewrite another tool call's
-arguments, so nothing forces compliance. The plugin's job is to make the briefing exist
-and remind you to use it.
+## Call-time enforcement (PreToolUse)
+
+The SessionStart nudge fires once and is easy to lose track of by the time you actually
+delegate. So a **PreToolUse hook** (`hooks/brief-pretool.py`, matcher `Agent|Task|Workflow`)
+reinforces the rule at the moment of the call:
+
+- **Agent / Task** with an architecture/code-shaped prompt that references no briefing →
+  **blocked** (`permissionDecision: deny`) with a reason telling you to re-issue the call
+  after briefing the subagent with the index. Add **`[no-brief]`** to the prompt to opt out
+  when briefing is genuinely unneeded (e.g. a pure research/read-only delegation).
+- **Workflow** → a non-blocking `additionalContext` reminder instead (a workflow script
+  always looks code-shaped, so hard-blocking every one would be too disruptive).
+- **Fail-safe:** any error, unparseable input, or missing field → allow, never crash a call.
+
+A hook still cannot rewrite another tool call's arguments, so it can't auto-inject the
+briefing text — but it *can* stop an unbriefed code delegation at the moment it happens so
+you re-issue it correctly. Between the SessionStart nudge, the on-disk index, and this
+gate, "I forgot to brief the subagent" stops being a silent failure.
 
 ## Regeneration & staleness
 
@@ -85,7 +100,9 @@ write, no side effects beyond the index and its fingerprint file.)
 - It does not open every memory **file** — it uses the already-compact `MEMORY.md` index,
   so type tags are inferred from index cues and used only to rank, never asserted.
 - It does not modify the subagent, CLAUDE.md, memory, or any plugin.
-- It does not force the orchestrator to brief anyone — that judgment stays with you.
+- It does not *auto-inject* briefing text into a subagent's prompt (a hook can't rewrite
+  another tool's arguments) — it blocks/reminds so you re-issue the call briefed. The
+  content judgment (which rules to paste) stays with you.
 
 ## The point
 
