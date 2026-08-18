@@ -14,6 +14,13 @@ purely because nobody told it the rule exists.
 brief-agents fixes that by keeping a compact, always-current **agent briefing index** on
 disk and nudging you to hand it to every code/architecture subagent you spawn.
 
+## Install
+
+```
+/plugin marketplace add haiggoh/get-haiggoh
+/plugin install brief-agents@haiggoh
+```
+
 ## What it does
 
 1. **Generates `~/.claude/agent-briefing-index.md`** — a compact, one-line-per-entry digest
