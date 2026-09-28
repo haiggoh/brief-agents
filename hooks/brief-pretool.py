@@ -13,6 +13,10 @@ intervenes so the orchestrator re-issues the call WITH the agent-briefing index.
   * Workflow    -> non-blocking additionalContext reminder (a workflow script always looks
                    code-shaped, so hard-blocking every workflow would be too disruptive).
 
+Agent(subagent_type="fork") is exempt: a fork inherits the caller's full conversation
+context (including any briefing already established), so there is nothing to brief it
+with — enforcing here would just force a meaningless "[no-brief]" tag on every fork call.
+
 FAIL-SAFE above all: any error, unparseable stdin, or missing field -> emit nothing and
 exit 0 (the tool call proceeds). A hook must never crash or wrongly block a call on a bug.
 """
@@ -52,6 +56,12 @@ def _is_briefed(text):
     return any(m in text for m in BRIEF_MARKERS)
 
 
+def _is_fork(tool_name, tool_input):
+    if tool_name != "Agent" or not isinstance(tool_input, dict):
+        return False
+    return str(tool_input.get("subagent_type", "")).strip().lower() == "fork"
+
+
 def _delegation_text(tool_name, tool_input):
     """Pull the delegation intent out of the tool arguments. Note the real stdin schema:
     tool_name is top-level; the prompt/description/script live under payload['tool_input']."""
@@ -75,7 +85,10 @@ def main():
     except Exception:
         return 0  # unparseable -> allow silently
     tool_name = payload.get("tool_name", "")
-    text = _delegation_text(tool_name, payload.get("tool_input", {}))
+    tool_input = payload.get("tool_input", {})
+    if _is_fork(tool_name, tool_input):
+        return 0  # a fork inherits full context -> no fresh subagent to brief
+    text = _delegation_text(tool_name, tool_input)
     if not text.strip() or not _is_code_shaped(text) or _is_briefed(text):
         return 0  # nothing to enforce -> allow silently (no output = proceed)
 

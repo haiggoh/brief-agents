@@ -52,7 +52,9 @@ disk and nudging you to hand it to every code/architecture subagent you spawn.
    deny`) with a reason telling you to re-issue it after briefing the subagent with the
    index — or add `[no-brief]` to opt out. `Workflow` gets a softer, non-blocking
    `additionalContext` reminder (a workflow script always looks code-shaped, so hard-
-   blocking every one would be too disruptive). Fail-safe: any error → allow, never crash.
+   blocking every one would be too disruptive). `Agent(subagent_type="fork")` is exempt —
+   a fork inherits the caller's full conversation context, so there is no fresh subagent
+   to brief. Fail-safe: any error → allow, never crash.
 
 A hook still cannot rewrite another tool call's arguments, so it can't auto-inject the
 briefing text; what it can do is make the briefing exist, remind you at session start, and

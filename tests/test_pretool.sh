@@ -32,7 +32,11 @@ echo "$OUT" | grep -qv '"permissionDecision": "deny"'; check $? "Workflow code -
 OUT="$(run '{"tool_name":"Agent","tool_input":{"prompt":"implement it [no-brief]","description":""}}')"
 [ -z "$OUT" ]; check $? "[no-brief] opt-out -> allow"
 
-# 6. malformed stdin -> allow, no crash (exit 0, no output)
+# 6. Agent + subagent_type=fork + code-shaped + unbriefed -> allow (fork inherits context)
+OUT="$(run '{"tool_name":"Agent","tool_input":{"subagent_type":"fork","prompt":"Implement a new feature in the auth module","description":"x"}}')"
+[ -z "$OUT" ]; check $? "Agent fork code+unbriefed -> allow (no output)"
+
+# 7. malformed stdin -> allow, no crash (exit 0, no output)
 OUT="$(echo 'not json' | python3 "$HOOK" 2>/dev/null)"; rc=$?
 [ "$rc" = 0 ] && [ -z "$OUT" ]; check $? "malformed stdin -> fail-safe allow (exit 0, no output)"
 

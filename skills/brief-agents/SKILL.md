@@ -67,6 +67,10 @@ reinforces the rule at the moment of the call:
   when briefing is genuinely unneeded (e.g. a pure research/read-only delegation).
 - **Workflow** → a non-blocking `additionalContext` reminder instead (a workflow script
   always looks code-shaped, so hard-blocking every one would be too disruptive).
+- **`Agent(subagent_type="fork")`** → always allowed, no check performed. A fork inherits
+  the caller's full conversation context rather than starting fresh, so there is no
+  unbriefed subagent to catch — enforcing here would just force a meaningless `[no-brief]`
+  tag onto every fork call.
 - **Fail-safe:** any error, unparseable input, or missing field → allow, never crash a call.
 
 A hook still cannot rewrite another tool call's arguments, so it can't auto-inject the
