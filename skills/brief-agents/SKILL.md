@@ -55,6 +55,29 @@ Before calling the Agent/Workflow tool for **architecture or code** work, do **o
 Prefer pasting the specific relevant rules for a focused task (cheaper, sharper); point at
 the file for open-ended work where you can't predict what the subagent will touch.
 
+## Briefing checklist — gaps a delegated agent will fill with plausible guesses
+
+A generative model cannot leave a gap blank — every unstated detail becomes a plausible
+GUESS asserted as fact. Before delegating, verify your brief covers these common silent
+failure points:
+
+- **Ordering of returned collections** — first vs last write wins? newest-first or
+  oldest-first? state it explicitly.
+- **Tie-breaking / precedence** — when two rules conflict, which wins? document it.
+- **Inclusive vs exclusive boundaries** — is the interval `[start, end]` or `[start, end)`?
+- **Empty / absent / malformed input** — what should the output be when the input is
+  missing, empty, or doesn't match the expected shape?
+- **Timezone- and locale-dependent values** — assert structurally (e.g. "ISO 8601"),
+  not with an exact string that breaks in a different locale.
+
+**Rule: ALWAYS mutation-test offloaded tests.** A passing test can hide a blind spot.
+Example: deleting a `where !known.contains` guard did NOT fail
+`testBaselineDoesNotOverwriteArchived` because `record(for:)` returns `.first` and the
+duplicate record hid behind the still-correct first entry; the test only bit once it
+asserted `records.count == 1` BEFORE unwrapping. If a test passes without the guard
+it's meant to test, the test is not verifying what you think — mutation-test it by
+temporarily breaking the code and confirming the test fails.
+
 ## Call-time enforcement (PreToolUse)
 
 The SessionStart nudge fires once and is easy to lose track of by the time you actually
