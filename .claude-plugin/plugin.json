@@ -1,6 +1,6 @@
 {
   "name": "brief-agents",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "A subagent inherits none of your durable rules \u2014 not your CLAUDE.md, not your memory, not your installed-plugin nudges \u2014 so it can blindly violate one it never heard of. brief-agents scans all three layers into one compact ~/.claude/agent-briefing-index.md (auto-regenerated when the sources change) and nudges you to brief the subagent with it before delegating architecture or code work. A SessionStart hook nudges you, and a PreToolUse hook enforces at call time (blocks an unbriefed Agent/Task code delegation, soft-reminds for Workflow; add [no-brief] to opt out); Agent(subagent_type=\"fork\") is exempt since a fork inherits the caller's full context. Plus a skill with the procedure. Sibling to no-hidden-changes, measure-twice, audit-loose-ends.",
   "author": {
     "name": "Heiko Brantsch"
