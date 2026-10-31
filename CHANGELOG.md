@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.8] — 2026-10-31
+
+### Changed
+- The plugin description (plugin.json, and the marketplace listing it feeds) is rewritten to describe
+  the plugin's full current capabilities.
+
 ## [0.1.7] — 2026-10-31 — 📝: the credit-moment mark on the plugin's surfaces
 
 - The repo's GitHub About emoji (📝) now leads what the user and model read at the plugin's credit
