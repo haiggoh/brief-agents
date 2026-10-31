@@ -93,7 +93,7 @@ def main():
         return 0  # nothing to enforce -> allow silently (no output = proceed)
 
     idx = _index_path()
-    reason = ("brief-agents: this looks like architecture/code delegation, but the prompt "
+    reason = ("📝 brief-agents: this looks like architecture/code delegation, but the prompt "
               "doesn't reference the agent-briefing index. Re-issue the call after briefing the "
               "subagent with %s (paste the relevant rules or tell it to read that file) — or add "
               "'[no-brief]' to the prompt if briefing is genuinely unneeded." % idx)

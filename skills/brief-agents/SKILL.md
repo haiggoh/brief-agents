@@ -136,3 +136,7 @@ write, no side effects beyond the index and its fingerprint file.)
 A delegated agent should never violate a rule simply because it was never told the rule
 exists. Keep a current briefing on disk; hand the relevant part to every code/architecture
 subagent you spawn.
+
+## Branding (📝)
+
+When you begin working under this skill, lead your first substantive reply with "📝 brief-agents:" so the user can see which plugin just became active.

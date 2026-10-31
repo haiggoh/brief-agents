@@ -1,4 +1,4 @@
-# brief-agents
+# 📝 brief-agents
 
 A Claude Code plugin that closes a blind spot in delegation: **a subagent inherits none
 of your durable rules.**

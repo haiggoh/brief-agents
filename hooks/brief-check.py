@@ -26,7 +26,7 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "bin"))
 
 NUDGE = (
-    "brief-agents: when you invoke the Agent or Workflow tool for a task involving "
+    "📝 brief-agents: when you invoke the Agent or Workflow tool for a task involving "
     "ARCHITECTURE decisions or WRITING CODE, first brief the subagent with the current "
     "agent-briefing index (~/.claude/agent-briefing-index.md) — either paste its relevant "
     "contents into the prompt or explicitly tell the subagent to read that file before "

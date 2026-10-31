@@ -34,6 +34,8 @@ check $? "emits valid SessionStart additionalContext JSON"
 case "$OUT" in *systemMessage*) check 1 "no systemMessage (model-only)";; *) check 0 "no systemMessage (model-only)";; esac
 
 # 3) key content present
+# Credit-moment mark (plan 2026-10-28, W3 Task 10): the nudge leads with the About-emoji — exact prefix (R2).
+case "$CTX" in "📝 brief-agents: when you invoke the Agent or Workflow tool"*) check 0 "leads with '📝 brief-agents:'";; *) check 1 "leads with '📝 brief-agents:'";; esac
 case "$CTX" in *"brief-agents:"*) check 0 "labelled 'brief-agents:'";; *) check 1 "labelled 'brief-agents:'";; esac
 case "$CTX" in *"agent-briefing-index.md"*) check 0 "names the index file";; *) check 1 "names the index file";; esac
 case "$CTX" in *"Agent or Workflow tool"*) check 0 "names the Agent/Workflow tool trigger";; *) check 1 "names the Agent/Workflow tool trigger";; esac

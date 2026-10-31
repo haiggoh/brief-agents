@@ -1,0 +1,10 @@
+# Changelog
+
+## [0.1.7] — 2026-10-31 — 📝: the credit-moment mark on the plugin's surfaces
+
+- The repo's GitHub About emoji (📝) now leads what the user and model read at the plugin's credit
+  moments (plan 2026-10-28, §Wave 3 Task 10): the SessionStart nudge's first token, the PreToolUse
+  block reason (the plugin just prevented an unbriefed delegation — a credit moment), a ≤3-line
+  Branding section in the SKILL.md, the plugin.json description, and the README h1.
+- First CHANGELOG file for this repo (created with this entry).
+- Tests: exact-prefix pins for the nudge and the block reason (test_hook.sh, test_pretool.sh).

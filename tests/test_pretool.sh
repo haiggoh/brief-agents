@@ -14,6 +14,10 @@ run() { echo "$1" | python3 "$HOOK" 2>/dev/null; }
 # 1. Agent + code + unbriefed -> deny
 OUT="$(run '{"tool_name":"Agent","tool_input":{"prompt":"Implement a new feature in the auth module","description":"x"}}')"
 echo "$OUT" | grep -q '"permissionDecision": "deny"'; check $? "Agent code+unbriefed -> deny"
+# The block reason is a credit moment (the plugin just prevented an unbriefed delegation) and
+# leads with the About-emoji — exact prefix (plan 2026-10-28, W3 Task 10).
+REASON="$(printf '%s' "$OUT" | python3 -c 'import json,sys; print(json.load(sys.stdin)["hookSpecificOutput"]["permissionDecisionReason"])' 2>/dev/null)"
+case "$REASON" in "📝 brief-agents: this looks like architecture/code delegation"*) check 0 "block reason leads with '📝 brief-agents:'";; *) check 1 "block reason leads with '📝 brief-agents:' (got: ${REASON:0:50})";; esac
 
 # 2. Agent + code + briefed (references index) -> allow (empty output)
 OUT="$(run '{"tool_name":"Agent","tool_input":{"prompt":"Refactor parser; read ~/.claude/agent-briefing-index.md first","description":""}}')"
