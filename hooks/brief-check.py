@@ -60,9 +60,17 @@ def _primer_line() -> str:
         with open(path, encoding="utf-8") as fh:
             tree = ast.parse(fh.read())
         for node in tree.body:
-            if (isinstance(node, ast.Assign)
-                    and any(isinstance(t, ast.Name) and t.id == "PRIMER" for t in node.targets)):
-                p = ast.literal_eval(node.value)
+            # plain Assign and annotated AnnAssign both carry the PRIMER constant
+            if isinstance(node, ast.Assign):
+                targets, value = node.targets, node.value
+            elif isinstance(node, ast.AnnAssign):
+                if node.value is None:
+                    continue  # bare annotation (PRIMER: str) carries no value
+                targets, value = [node.target], node.value
+            else:
+                continue
+            if any(isinstance(t, ast.Name) and t.id == "PRIMER" for t in targets):
+                p = ast.literal_eval(value)
                 if isinstance(p, str) and p.strip() and "\n" not in p:
                     return p
                 return ""

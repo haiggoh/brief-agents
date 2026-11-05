@@ -55,6 +55,6 @@ check "$rc" "brief-pretool.py exposes a one-line PRIMER (<= 160 chars)"
 
 # 9. --help prints the docs without reading stdin, exit 0, no hook JSON
 H="$(python3 "$HOOK" --help </dev/null)"; rc=$?
-if [ "$rc" = 0 ] && printf '%s' "$H" | grep -q 'PreToolUse' && [ "${H:0:1}" != "{" ]; then check 0 "--help prints docs, no hook JSON, exit 0"; else check 1 "--help prints docs, no hook JSON, exit 0"; fi
+if [ "$rc" = 0 ] && [ -n "$H" ] && printf '%s' "$H" | grep -q 'PreToolUse' && [ "${H:0:1}" != "{" ]; then check 0 "--help prints docs, no hook JSON, exit 0"; else check 1 "--help prints docs, no hook JSON, exit 0"; fi
 
 if [ "$fail" = 0 ]; then echo "ALL PASS"; else echo "SOME FAILED"; exit 1; fi

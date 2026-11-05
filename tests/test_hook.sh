@@ -62,11 +62,11 @@ p = getattr(m, "PRIMER", "")
 assert isinstance(p, str) and p.strip() and "\n" not in p and len(p) <= 160, repr(p)
 print(p)' "$HERE/../hooks/brief-pretool.py")"; rc=$?
 check "$rc" "brief-pretool.py exposes a one-line PRIMER (<= 160 chars)"
-if [ -n "$PRIMER" ]; then printf '%s\n' "$CTX" | grep -qF "$PRIMER"; rc=$?; else rc=1; fi
-check "$rc" "SessionStart additionalContext carries the PRIMER as its own line"
+if [ -n "$PRIMER" ]; then printf '%s\n' "$CTX" | grep -qxF "$PRIMER"; rc=$?; else rc=1; fi
+check "$rc" "SessionStart additionalContext carries the PRIMER as its own whole line"
 
-# 7) --help prints the docs, no hook JSON (hook output starts with '{'), exit 0
+# 7) --help prints non-empty docs, no hook JSON (hook output starts with '{'), exit 0
 H="$(python3 "$HOOK" --help </dev/null)"; rc=$?
-if [ "$rc" = 0 ] && [ "${H:0:1}" != "{" ]; then check 0 "--help prints docs, no hook JSON, exit 0"; else check 1 "--help prints docs, no hook JSON, exit 0"; fi
+if [ "$rc" = 0 ] && [ -n "$H" ] && [ "${H:0:1}" != "{" ]; then check 0 "--help prints docs, no hook JSON, exit 0"; else check 1 "--help prints docs, no hook JSON, exit 0"; fi
 
 if [ "$fail" = 0 ]; then echo "ALL PASS"; else echo "FAILURES"; exit 1; fi
