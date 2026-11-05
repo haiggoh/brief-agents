@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.2.0] — 2026-11-05
+
+### Added — session-start PRIMER line for the brief-pretool guard
+
+- `hooks/brief-pretool.py` (the Agent|Task|Workflow PreToolUse guard) carries a one-line
+  `PRIMER` constant (149 chars) stating the rule imperatively. The existing SessionStart
+  hook `hooks/brief-check.py` appends it as the nudge's final line — still ONE SessionStart
+  injection — read via AST from `brief-pretool.py` (the guard module is never executed at
+  session start), fail-open throughout.
+- Both hooks now support `--help` (print the docstring, no hook JSON, exit 0).
+- Tests extended in `tests/test_hook.sh` / `tests/test_pretool.sh` (PRIMER present, one line,
+  carried as its own whole line in the SessionStart context, `--help` behaviour); suite
+  ALL PASS.
+
 ## [0.1.8] — 2026-10-31
 
 ### Changed
