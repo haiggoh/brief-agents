@@ -27,6 +27,9 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "bin"))
 
+# SessionStart primer (appended as its own line by hooks/brief-check.py): one line, <= 160 chars.
+PRIMER = "Before Agent/Task/Workflow for architecture or code, brief the subagent with ~/.claude/agent-briefing-index.md; subagents inherit none of your rules."
+
 
 def _index_path():
     try:
@@ -80,6 +83,9 @@ def _emit(obj):
 
 
 def main():
+    if any(a in ("-h", "--help") for a in sys.argv[1:]):
+        sys.stdout.write(__doc__ or "")
+        return 0
     try:
         payload = json.loads(sys.stdin.read() or "{}")
     except Exception:

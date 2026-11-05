@@ -15,7 +15,8 @@ session start):
      tell the ORCHESTRATING Claude to brief subagents with the index before delegating
      architecture/code work. This is guidance for the orchestrator — the hook never
      touches the subagent; the subagent learns the rules only via what the orchestrator
-     puts in its prompt or tells it to read.
+     puts in its prompt or tells it to read. The nudge's final line is the PreToolUse
+     guard's one-line PRIMER (read from brief-pretool.py via AST, never executed here).
 
 Emits exactly one JSON object on stdout, matching the shape used by the sibling haiggoh
 nudge plugins (audit-loose-ends / measure-twice / no-hidden-changes)."""
@@ -49,10 +50,38 @@ def _refresh_index():
         pass
 
 
+def _primer_line() -> str:
+    """The PreToolUse guard's PRIMER as one line, read via AST from brief-pretool.py —
+    a session-start hook never EXECUTES the guard module just to read a string.
+    '' on any problem: the nudge must still emit."""
+    import ast
+    try:
+        path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "brief-pretool.py")
+        with open(path, encoding="utf-8") as fh:
+            tree = ast.parse(fh.read())
+        for node in tree.body:
+            if (isinstance(node, ast.Assign)
+                    and any(isinstance(t, ast.Name) and t.id == "PRIMER" for t in node.targets)):
+                p = ast.literal_eval(node.value)
+                if isinstance(p, str) and p.strip() and "\n" not in p:
+                    return p
+                return ""
+        return ""
+    except Exception:
+        return ""
+
+
 def main():
+    if any(a in ("-h", "--help") for a in sys.argv[1:]):
+        sys.stdout.write(__doc__ or "")
+        return 0
     _refresh_index()
+    ctx = NUDGE
+    primer = _primer_line()
+    if primer:
+        ctx = NUDGE + "\n" + primer
     out = {"hookSpecificOutput": {"hookEventName": "SessionStart",
-                                  "additionalContext": NUDGE}}
+                                  "additionalContext": ctx}}
     sys.stdout.write(json.dumps(out) + "\n")
     return 0
 

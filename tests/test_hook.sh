@@ -53,4 +53,20 @@ python3 "$HOOK" >/dev/null
 AFTER="$(python3 -c 'import os,sys; print(os.stat(sys.argv[1]).st_mtime_ns)' "$BRIEF_AGENTS_INDEX_FILE")"
 [ "$BEFORE" = "$AFTER" ]; check $? "does not rewrite the index when sources are unchanged"
 
-[ "$fail" = 0 ] && echo "ALL PASS" || { echo "FAILURES"; exit 1; }
+# 6) session primer: the PreToolUse guard's PRIMER appears as its own line in the SessionStart context
+PRIMER="$(python3 -c 'import importlib.util, sys
+spec = importlib.util.spec_from_file_location("brief_pretool", sys.argv[1])
+m = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(m)
+p = getattr(m, "PRIMER", "")
+assert isinstance(p, str) and p.strip() and "\n" not in p and len(p) <= 160, repr(p)
+print(p)' "$HERE/../hooks/brief-pretool.py")"; rc=$?
+check "$rc" "brief-pretool.py exposes a one-line PRIMER (<= 160 chars)"
+if [ -n "$PRIMER" ]; then printf '%s\n' "$CTX" | grep -qF "$PRIMER"; rc=$?; else rc=1; fi
+check "$rc" "SessionStart additionalContext carries the PRIMER as its own line"
+
+# 7) --help prints the docs, no hook JSON (hook output starts with '{'), exit 0
+H="$(python3 "$HOOK" --help </dev/null)"; rc=$?
+if [ "$rc" = 0 ] && [ "${H:0:1}" != "{" ]; then check 0 "--help prints docs, no hook JSON, exit 0"; else check 1 "--help prints docs, no hook JSON, exit 0"; fi
+
+if [ "$fail" = 0 ]; then echo "ALL PASS"; else echo "FAILURES"; exit 1; fi

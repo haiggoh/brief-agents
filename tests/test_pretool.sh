@@ -44,4 +44,17 @@ OUT="$(run '{"tool_name":"Agent","tool_input":{"subagent_type":"fork","prompt":"
 OUT="$(echo 'not json' | python3 "$HOOK" 2>/dev/null)"; rc=$?
 [ "$rc" = 0 ] && [ -z "$OUT" ]; check $? "malformed stdin -> fail-safe allow (exit 0, no output)"
 
+# 8. PRIMER constant on the guard module: one line, <= 160 chars
+python3 -c 'import importlib.util, sys
+spec = importlib.util.spec_from_file_location("brief_pretool", sys.argv[1])
+m = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(m)
+p = getattr(m, "PRIMER", "")
+assert isinstance(p, str) and p.strip() and "\n" not in p and len(p) <= 160, repr(p)' "$HOOK"; rc=$?
+check "$rc" "brief-pretool.py exposes a one-line PRIMER (<= 160 chars)"
+
+# 9. --help prints the docs without reading stdin, exit 0, no hook JSON
+H="$(python3 "$HOOK" --help </dev/null)"; rc=$?
+if [ "$rc" = 0 ] && printf '%s' "$H" | grep -q 'PreToolUse' && [ "${H:0:1}" != "{" ]; then check 0 "--help prints docs, no hook JSON, exit 0"; else check 1 "--help prints docs, no hook JSON, exit 0"; fi
+
 if [ "$fail" = 0 ]; then echo "ALL PASS"; else echo "SOME FAILED"; exit 1; fi
