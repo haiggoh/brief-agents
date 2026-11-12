@@ -47,11 +47,22 @@ case "$LC" in *"none of them"*) check 0 "warns subagent inherits none of the rul
 grep -q "A rule" "$BRIEF_AGENTS_INDEX_FILE"; check $? "index contains the scanned CLAUDE.md section"
 
 # 5) idempotent-when-fresh: a second run must NOT rewrite (fingerprint unchanged)
-BEFORE="$(python3 -c 'import os,sys; print(os.stat(sys.argv[1]).st_mtime_ns)' "$BRIEF_AGENTS_INDEX_FILE")"
-sleep 0.02
+# Clock-granularity-proof: plant an impossible mtime on the INDEX (the fingerprint covers the
+# SOURCES, so this does not make it stale). Any rewrite replaces the file and loses the planted
+# value. The old check slept 0.02s and compared mtimes, which on a 1s-granularity filesystem
+# could land in the same tick and pass even when the index WAS rewritten.
+PLANT=1000000000
+plant() { python3 -c 'import os,sys; os.utime(sys.argv[1], (int(sys.argv[2]),)*2)' "$BRIEF_AGENTS_INDEX_FILE" "$PLANT"; }
+mtime_s() { python3 -c 'import os,sys; print(int(os.stat(sys.argv[1]).st_mtime))' "$BRIEF_AGENTS_INDEX_FILE"; }
+plant
 python3 "$HOOK" >/dev/null
-AFTER="$(python3 -c 'import os,sys; print(os.stat(sys.argv[1]).st_mtime_ns)' "$BRIEF_AGENTS_INDEX_FILE")"
-[ "$BEFORE" = "$AFTER" ]; check $? "does not rewrite the index when sources are unchanged"
+[ "$(mtime_s)" = "$PLANT" ]; check $? "does not rewrite the index when sources are unchanged"
+# 5b) planted positive — the check above must be ABLE to fail: a changed source rewrites it.
+plant
+printf '# G\n## A rule\nthe gist\n## Another rule\nmore\n' > "$BRIEF_AGENTS_GLOBAL_CLAUDE_MD"
+python3 -c 'import os,sys; os.utime(sys.argv[1], (1500000000,)*2)' "$BRIEF_AGENTS_GLOBAL_CLAUDE_MD"
+python3 "$HOOK" >/dev/null
+[ "$(mtime_s)" != "$PLANT" ]; check $? "a changed source DOES rewrite the index (the idempotency check can fail)"
 
 # 6) session primer: the PreToolUse guard's PRIMER appears as its own line in the SessionStart context
 PRIMER="$(python3 -c 'import importlib.util, sys

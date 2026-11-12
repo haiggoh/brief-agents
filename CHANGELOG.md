@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.2.1] — 2026-11-12
+
+### Fixed — the idempotency test could pass on coarse-mtime filesystems
+
+- `tests/test_hook.sh` check 5 slept 0.02 s and compared `st_mtime_ns`; on a 1 s-granularity
+  filesystem both reads could land in the same tick and pass even if the index was rewritten.
+  It now plants an impossible mtime on the index (the fingerprint covers the SOURCES, so this
+  does not make it stale) and asserts the planted value survives the second run. New check 5b
+  is the planted positive: a changed source must rewrite the index, so check 5 can fail.
+  Mutation-tested: an always-stale freshness check turns check 5 red. Test-only, no behaviour change.
+
 ## [0.2.0] — 2026-11-05
 
 ### Added — session-start PRIMER line for the brief-pretool guard
