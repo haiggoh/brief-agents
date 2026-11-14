@@ -14,6 +14,23 @@
 - Freshness reviewed, no defect found: the staleness fingerprint is sorted-stream-safe and
   covered by test_fingerprint/test_is_stale; `show` regenerates when stale.
 
+### Review round (DeepSeek V4.1 Flash, cross-family) fixes
+
+- `--help` is a dedicated USAGE text (developer prose no longer leaks into it), documents
+  the flags themselves and the bare-invocation default (which is `generate` — a WRITE), and
+  names every env override INCLUDING the memory-index default
+  (`~/.claude/projects/<cwd-slug>/memory/MEMORY.md`); the names are derived from
+  `brief_agents_core`'s own lookups by the test, so doc and code cannot drift.
+- Help/version are recognised ANYWHERE in argv: `brief-agents.py generate --help` used to
+  run the write verb while the user hovered over help.
+- Tests run with HOME and all five `BRIEF_AGENTS_*` vars redirected into the sandbox and
+  assert --help/--version write NOTHING (a regression routing help through generate fails
+  here instead of regenerating the tester's live index); `--version`/`-V` stdout is
+  asserted exactly; both aliases are exercised.
+- Hooks verified unaffected: both intercept `-h/--help` before shelling out.
+- Waypoint recorded for a core design question the review raised (does generate() stamp
+  the fingerprint fresh after an empty/failed input scan?).
+
 ## [0.2.1] — 2026-11-12
 
 ### Fixed — the idempotency test could pass on coarse-mtime filesystems

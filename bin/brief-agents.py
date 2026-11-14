@@ -1,23 +1,9 @@
 #!/usr/bin/env python3
 """brief-agents CLI — generate / inspect the agent briefing index.
 
-Usage:
-  brief-agents.py generate      Rebuild ~/.claude/agent-briefing-index.md from live inputs
-                                and re-stamp the staleness fingerprint. Prints the path.
-  brief-agents.py show          Print the current index to stdout (generating it first if
-                                missing or stale).
-  brief-agents.py path          Print the index path.
-  brief-agents.py stale         Exit 0 if the index is stale/missing, 1 if fresh (for scripts).
-
-Environment overrides (all optional):
-  BRIEF_AGENTS_GLOBAL_CLAUDE_MD        the global instruction file (default ~/.claude/CLAUDE.md)
-  BRIEF_AGENTS_INSTALLED_PLUGINS_FILE  the plugin registry (default ~/.claude/plugins/installed_plugins.json)
-  BRIEF_AGENTS_INDEX_FILE              the generated index (default ~/.claude/agent-briefing-index.md)
-  BRIEF_AGENTS_FINGERPRINT_FILE        the staleness fingerprint (default ~/.claude/.brief-agents-fingerprint)
-  BRIEF_AGENTS_MEMORY_INDEX_FILE       the memory index scanned for agent-relevant entries
-
-This is the only place (besides the hook) that touches the filesystem for real; the scan
-and assembly logic lives in the fail-safe, unit-tested brief_agents_core module."""
+Developer note: this is the only place (besides the hook) that touches the filesystem for
+real; the scan and assembly logic lives in the fail-safe, unit-tested brief_agents_core
+module. The user-facing usage text is USAGE below (kept free of implementation prose)."""
 import os
 import sys
 
@@ -26,15 +12,36 @@ import brief_agents_core as core  # noqa: E402
 
 VERSION = "0.2.2"  # also in .claude-plugin/plugin.json and CHANGELOG.md
 
+USAGE = """Usage:
+  brief-agents.py generate      Rebuild the agent briefing index from live inputs and
+                                re-stamp the staleness fingerprint. Prints the path.
+                                (Bare invocation with no command also runs generate.)
+  brief-agents.py show          Print the current index to stdout (generating it first if
+                                missing or stale).
+  brief-agents.py path          Print the index path.
+  brief-agents.py stale         Exit 0 if the index is stale/missing, 1 if fresh (for scripts).
+  brief-agents.py --help, -h    Print this text (exit 0).
+  brief-agents.py --version, -V Print the version (exit 0).
+
+Environment overrides (all optional; env beats the default):
+  BRIEF_AGENTS_GLOBAL_CLAUDE_MD        global instruction file (default ~/.claude/CLAUDE.md)
+  BRIEF_AGENTS_INSTALLED_PLUGINS_FILE  plugin registry (default ~/.claude/plugins/installed_plugins.json)
+  BRIEF_AGENTS_INDEX_FILE              the generated index (default ~/.claude/agent-briefing-index.md)
+  BRIEF_AGENTS_FINGERPRINT_FILE        staleness fingerprint (default ~/.claude/.brief-agents-fingerprint)
+  BRIEF_AGENTS_MEMORY_INDEX_FILE       memory index to scan (default
+                                       ~/.claude/projects/<cwd-slug>/memory/MEMORY.md)
+"""
+
 
 def main(argv):
-    if len(argv) > 1:
-        if argv[1] in ("--help", "-h"):
-            sys.stdout.write(__doc__)
-            return 0
-        if argv[1] in ("--version", "-V"):
-            print(VERSION)
-            return 0
+    # Help/version win anywhere in argv: `brief-agents.py generate --help` must NOT run the
+    # write verb the user was hovering over (review finding 5).
+    if any(a in ("-h", "--help") for a in argv[1:]):
+        sys.stdout.write(USAGE)
+        return 0
+    if any(a in ("-V", "--version") for a in argv[1:]):
+        print(VERSION)
+        return 0
     cmd = argv[1] if len(argv) > 1 else "generate"
     cwd = os.getcwd()
 
@@ -54,7 +61,7 @@ def main(argv):
         return 0
 
     sys.stderr.write("unknown command: %s\n" % cmd)
-    sys.stderr.write(__doc__)
+    sys.stderr.write(USAGE)
     return 2
 
 
