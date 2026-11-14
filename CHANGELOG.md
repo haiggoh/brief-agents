@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.2.2] — 2026-11-14
+
+### Fixed (desktop-migration FLEET Phase 1 P0: version/help)
+
+- `--help` / `-h` are first-class now: the usage text (subcommands + all five
+  `BRIEF_AGENTS_*` environment overrides, newly documented) exits 0. Before, both `--help`
+  and `--version` fell into the unknown-command branch — an error line, exit 2, and no
+  version answer at all (probed).
+- `--version` / `-V` print the VERSION constant (0.2.2), which the new CLI test derives
+  from plugin.json so a future bump cannot stale it. Unknown commands keep their documented
+  exit 2.
+- Freshness reviewed, no defect found: the staleness fingerprint is sorted-stream-safe and
+  covered by test_fingerprint/test_is_stale; `show` regenerates when stale.
+
 ## [0.2.1] — 2026-11-12
 
 ### Fixed — the idempotency test could pass on coarse-mtime filesystems
