@@ -1,0 +1,103 @@
+{
+  "builder": "scripts/build-portable.py",
+  "builder_version": "1.0.0",
+  "components": [
+    {
+      "adaptation_class": "mechanical",
+      "evidence_level": "source-inspected",
+      "kind": "manifest",
+      "notes": "same name+version as the host manifest; an installed marketplace plugin wins over a synced copy in Code, so no double-run",
+      "path": ".claude-plugin/plugin.json",
+      "surfaces": {
+        "chat": true,
+        "code": true,
+        "cowork": true
+      }
+    },
+    {
+      "adaptation_class": "mechanical",
+      "evidence_level": "source-inspected",
+      "kind": "skill",
+      "notes": "the briefing guidance; CLI refs rewritten bin/ -> scripts/; host personal paths replaced with ${CLAUDE_PLUGIN_ROOT} in the source",
+      "path": "skills/brief-agents/SKILL.md",
+      "surfaces": {
+        "chat": true,
+        "code": true,
+        "cowork": true
+      }
+    },
+    {
+      "adaptation_class": "native-unchanged",
+      "evidence_level": "source-inspected",
+      "kind": "hooks",
+      "notes": "SessionStart check + PreToolUse delegate guard; hooks stay in hooks/",
+      "path": "hooks/hooks.json",
+      "surfaces": {
+        "chat": false,
+        "code": true,
+        "cowork": true
+      }
+    },
+    {
+      "adaptation_class": "mechanical",
+      "evidence_level": "source-inspected",
+      "kind": "hook-script",
+      "notes": "imports the core from ../bin in the host; rewritten to ../scripts in portable",
+      "path": "hooks/brief-check.py",
+      "surfaces": {
+        "chat": false,
+        "code": true,
+        "cowork": true
+      }
+    },
+    {
+      "adaptation_class": "mechanical",
+      "evidence_level": "source-inspected",
+      "kind": "hook-script",
+      "notes": "same ../bin -> ../scripts rewrite; references the sibling brief-check.py",
+      "path": "hooks/brief-pretool.py",
+      "surfaces": {
+        "chat": false,
+        "code": true,
+        "cowork": true
+      }
+    },
+    {
+      "adaptation_class": "mechanical",
+      "evidence_level": "source-inspected",
+      "kind": "script",
+      "notes": "CLI moved bin/ -> scripts/; adds its own dir to sys.path for the core module",
+      "path": "scripts/brief-agents.py",
+      "surfaces": {
+        "chat": false,
+        "code": true,
+        "cowork": true
+      }
+    },
+    {
+      "adaptation_class": "native-unchanged",
+      "evidence_level": "source-inspected",
+      "kind": "library",
+      "notes": "the scan/assembly core; imported by the CLI (own dir) and the hooks (../scripts)",
+      "path": "scripts/brief_agents_core.py",
+      "surfaces": {
+        "chat": false,
+        "code": true,
+        "cowork": true
+      }
+    }
+  ],
+  "files": {
+    ".claude-plugin/plugin.json": "d168b2212d62ef5949932513b98cb0e5aa4dc2f35741030eb9bc281d4b58f590",
+    "hooks/brief-check.py": "4cb48f78af59faf4cb38aade92c4cd62c11562b73c615fd5db14b9454f22dadb",
+    "hooks/brief-pretool.py": "0201c689cd358d7b6c70bd6f5918aed4b921e32f6bbd11d5bb1f378dc2770694",
+    "hooks/hooks.json": "11b34e35726c1b07765216e99a3445e02388c8fc46b9f1f48f63ab34ecb9ab3a",
+    "scripts/brief-agents.py": "3a52aee018ee615ad5608b79148fd4de2b9873b6c1561c547b40e21aa615210c",
+    "scripts/brief_agents_core.py": "35fc94a9ad0f9019cdd141e06a3b01441f6e6f1bd66f855545e62a101f8f73ae",
+    "skills/brief-agents/SKILL.md": "2aa9f03832eddc30ec7a2e77d48ce0ab59306b842792b65b806069b7305f4dcd"
+  },
+  "schema": "haiggoh-portable-build/1",
+  "source_commit": "adeacf3d57b07b6a0b38730b40ad5e2d6793780f",
+  "source_repo": "haiggoh/brief-agents",
+  "transform_version": "1"
+}

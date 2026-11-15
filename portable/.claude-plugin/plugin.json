@@ -1,0 +1,20 @@
+{
+  "name": "brief-agents",
+  "version": "0.2.3",
+  "description": "\ud83d\udcdd Subagents inherit none of your durable rules \u2014 not your CLAUDE.md, memory or plugin nudges. brief-agents scans all three into one compact ~/.claude/agent-briefing-index.md, regenerated when the sources change. A SessionStart hook nudges you to brief subagents, and a PreToolUse hook blocks unbriefed Agent/Task code delegations (Workflow gets a soft reminder; [no-brief] opts out; forks exempt).",
+  "author": {
+    "name": "Heiko Brantsch"
+  },
+  "homepage": "https://github.com/haiggoh/brief-agents",
+  "license": "MIT",
+  "keywords": [
+    "skill",
+    "hook",
+    "subagents",
+    "delegation",
+    "briefing",
+    "context",
+    "rules",
+    "sessions"
+  ]
+}

@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.2.3] — 2026-11-15
+
+### Added — Phase 4 Wave B: committed portable package (COORDINATION C1/C2)
+
+- New `scripts/build-portable.py` (from the reviewed pilot pattern) generates the committed
+  `portable/` package: same-name manifest, the skill, both hooks, and the CLI + core module
+  at `scripts/` (moved from `bin/`; the hooks' `../bin` import path is rewritten to
+  `../scripts` in the portable copies). Emits `portable/PORTABLE-BUILD.json`
+  (haiggoh-portable-build/1) and a deterministic dist zip.
+- Host doc fix folded into scope (user: issues found this session become scope): SKILL.md
+  no longer hardcodes `~/ClaudeWorkspace/...` personal paths — it uses `${CLAUDE_PLUGIN_ROOT}`.
+- `tests/test_portable.py` pins freshness, same-name manifest, no `bin/`, the host->portable
+  set (byte-identical moves, hook path rewrite), closure, C2 schema, deterministic zip, and
+  FUNCTIONAL proof on both entry points (CLI --version; the SessionStart hook emits the
+  briefing nudge from the portable root). Gate now also runs tests/test_cli.py.
+
 ## [0.2.2] — 2026-11-14
 
 ### Fixed (desktop-migration FLEET Phase 1 P0: version/help)

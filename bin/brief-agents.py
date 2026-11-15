@@ -10,7 +10,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import brief_agents_core as core  # noqa: E402
 
-VERSION = "0.2.2"  # also in .claude-plugin/plugin.json and CHANGELOG.md
+VERSION = "0.2.3"  # also in .claude-plugin/plugin.json and CHANGELOG.md
 
 USAGE = """Usage:
   brief-agents.py generate      Rebuild the agent briefing index from live inputs and

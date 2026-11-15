@@ -113,9 +113,9 @@ Regenerate manually when you've **just** changed a source mid-session and want t
 current before delegating:
 
 ```
-python3 ~/ClaudeWorkspace/brief-agents/bin/brief-agents.py generate   # rebuild + re-stamp
-python3 ~/ClaudeWorkspace/brief-agents/bin/brief-agents.py show       # print (rebuild if stale)
-python3 ~/ClaudeWorkspace/brief-agents/bin/brief-agents.py path       # just the path
+python3 ${CLAUDE_PLUGIN_ROOT}/bin/brief-agents.py generate   # rebuild + re-stamp
+python3 ${CLAUDE_PLUGIN_ROOT}/bin/brief-agents.py show       # print (rebuild if stale)
+python3 ${CLAUDE_PLUGIN_ROOT}/bin/brief-agents.py path       # just the path
 ```
 
 (When installed as a plugin the scripts live under the plugin cache; the `show`/`generate`
