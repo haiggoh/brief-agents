@@ -1,12 +1,45 @@
 # Changelog
 
+## [0.2.6] — 2026-11-16
+
+### Docs — backfilled the 0.2.4/0.2.5 release notes
+
+- The 0.2.4 and 0.2.5 CHANGELOG sections shipped as "(release notes go here)"
+  placeholders (the bump tool seeds the new entry from a template). Backfilled with the
+  real fixed-changes sections; the published GitHub release bodies were corrected to
+  match. No code changes; portable/ rebuilt at 0.2.6 for the manifest/version
+  consistency gate.
+
 ## [0.2.5] — 2026-11-16
 
-- (release notes go here)
+### Fixed — shipped-state repair (v0.2.4 released with a stale portable manifest + CLI version)
+
+- `--version` is now DERIVED from the plugin manifest next to the package root
+  (`.claude-plugin/plugin.json`) — no hardcoded `VERSION` constant to drift on the next
+  bump (test_cli already expected derivation; the constant made the released v0.2.4 tree
+  fail its own gate: test_cli version test + test_portable freshness/same-version/
+  entry-points, 4 failed).
+- `portable/` rebuilt at the host version (the version-bump tool does not cover
+  `portable/.claude-plugin/plugin.json`; a host bump now always needs a portable
+  rebuild — recorded for the fleet).
+- Full gate green on the shipped tree (pytest 13/13, shell suites 0, `--check` exit 0),
+  verified directly before release.
 
 ## [0.2.4] — 2026-11-16
 
-- (release notes go here)
+### Fixed — degraded scan no longer stamps the briefing fingerprint fresh
+
+- `generate()` stamped `compute_fingerprint()` unconditionally, and the fingerprint is
+  path + `st_mtime_ns` only. An input that EXISTS but cannot be READ (chmod/ACL — ctime
+  moves, mtime does not; a directory EISDIRs) makes the fail-safe readers return `''`/`{}`,
+  so an EMPTY index was latched FRESH forever and the PreToolUse guard pointed
+  orchestrators at an index saying "_(none found)_".
+- Now: if any fingerprint input exists but is unreadable, the index is still written but
+  the stamp is the sentinel `UNREADABLE` (never a real hash) — `is_stale()` keeps its
+  documented fail-safe True and the next SessionStart retries; once the input is
+  readable again the real hash differs, content lands, fresh stamp.
+- TDD: `test_generate_degraded_scan_no_fresh_stamp` RED on old code (3 failures) →
+  GREEN on the fix; mutation (revert) → RED; restored → GREEN.
 
 ## [0.2.3] — 2026-11-15
 
