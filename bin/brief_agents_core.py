@@ -570,10 +570,35 @@ def _atomic_write(path, text):
             os.remove(tmp)
 
 
+def _input_readable(path):
+    """True only if the path can actually be opened for reading. A directory or a
+    permissions/ACL failure stats fine but does not read — exactly the case the
+    mtime-only fingerprint cannot see (chmod moves ctime, not st_mtime)."""
+    try:
+        with open(path, "rb"):
+            return True
+    except Exception:
+        return False
+
+
 def generate(cwd, home=None, script_reader=read_text):
-    """Build + write the index AND stamp the fingerprint. Returns the index path."""
+    """Build + write the index AND stamp the fingerprint. Returns the index path.
+
+    Degraded-scan guard: if any fingerprint input EXISTS but cannot be read, the
+    index is still written (transparency about what was found) but the stamp is
+    the sentinel "UNREADABLE" — never a real hash — so is_stale() keeps returning
+    True (its documented fail-safe: regenerate rather than serve an absent index)
+    and the next SessionStart retries. Without this, an empty scan (fail-safe
+    readers returned '') would be latched FRESH: chmod/ACL changes do not move
+    st_mtime, so the fingerprint would never flip and the PreToolUse guard would
+    point orchestrators at an index saying "_(none found)_" forever. Once the
+    input is readable again the real hash differs from the sentinel, the index
+    regenerates with content, and the fresh stamp lands."""
     home = home or os.path.expanduser("~")
+    inputs = fingerprint_inputs(cwd, home)
     text = build_index(cwd, home=home, script_reader=script_reader)
     _atomic_write(index_output_path(), text)
-    _atomic_write(fingerprint_path(), compute_fingerprint(fingerprint_inputs(cwd, home)))
+    degraded = any(os.path.exists(p) and not _input_readable(p) for p in inputs)
+    _atomic_write(fingerprint_path(),
+                  "UNREADABLE" if degraded else compute_fingerprint(inputs))
     return index_output_path()

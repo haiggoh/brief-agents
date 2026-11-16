@@ -237,6 +237,50 @@ def test_is_stale():
                 os.environ.pop(k, None)
 
 
+def test_generate_degraded_scan_no_fresh_stamp():
+    """Waypoint brief-agents-core-does: generate() must NOT stamp the fingerprint
+    fresh when an input EXISTS but cannot be READ. The fingerprint is path+mtime
+    only, and chmod/ACL changes move ctime, not mtime — so without a guard, an
+    empty scan (fail-safe readers returned '') is latched FRESH forever and the
+    PreToolUse guard points orchestrators at an index that says '_(none found)_'."""
+    print("generate degraded scan")
+    with tempfile.TemporaryDirectory() as d:
+        idx = os.path.join(d, "index.md")
+        fp = os.path.join(d, "fp")
+        src = os.path.join(d, "CLAUDE.md")
+        open(src, "w").write("# t\n## H\ngist\n")
+        # an input that EXISTS but cannot be opened for reading: a directory
+        # (EISDIR) — needs no chmod, so the test is permission-independent
+        unreadable = os.path.join(d, "unreadable.json")
+        os.makedirs(unreadable)
+        os.environ["BRIEF_AGENTS_INDEX_FILE"] = idx
+        os.environ["BRIEF_AGENTS_FINGERPRINT_FILE"] = fp
+        os.environ["BRIEF_AGENTS_GLOBAL_CLAUDE_MD"] = src
+        os.environ["BRIEF_AGENTS_INSTALLED_PLUGINS_FILE"] = unreadable
+        os.environ["BRIEF_AGENTS_MEMORY_INDEX_FILE"] = os.path.join(d, "MEMORY.md")
+        try:
+            core.generate(d)
+            check(core.is_stale(d) is True,
+                  "degraded scan (existing but unreadable input) must NOT stamp fresh")
+            stamp = open(fp).read().strip()
+            check(stamp != core.compute_fingerprint(core.fingerprint_inputs(d)),
+                  "stamp is a sentinel, never the real hash (is_stale stays True)")
+            check("_(no plugin nudges found)_" in open(idx).read(),
+                  "index honestly shows the empty section while degraded")
+            # heal: replace the unreadable entry with a readable file
+            os.rmdir(unreadable)
+            open(unreadable, "w").write('{"plugins":{}}')
+            check(core.is_stale(d) is True, "heal detected (sentinel != real hash)")
+            core.generate(d)
+            check(core.is_stale(d) is False, "fresh once inputs are readable again")
+            check("**H**" in open(idx).read(), "content lands after the heal")
+        finally:
+            for k in ("BRIEF_AGENTS_INDEX_FILE", "BRIEF_AGENTS_FINGERPRINT_FILE",
+                      "BRIEF_AGENTS_GLOBAL_CLAUDE_MD", "BRIEF_AGENTS_INSTALLED_PLUGINS_FILE",
+                      "BRIEF_AGENTS_MEMORY_INDEX_FILE"):
+                os.environ.pop(k, None)
+
+
 # --------------------------------------------------------------------------
 # load_installed_plugins + plugin_briefing_line
 # --------------------------------------------------------------------------
@@ -366,7 +410,8 @@ def main():
                test_extract_nudge_fallback, test_extract_nudge_truncated_fragment,
                test_parse_memory_index, test_rank_memory_entries,
                test_filter_memory_for_agents, test_cap_with_pointer,
-               test_fingerprint, test_is_stale, test_load_installed_plugins,
+               test_fingerprint, test_is_stale, test_generate_degraded_scan_no_fresh_stamp,
+               test_load_installed_plugins,
                test_plugin_briefing_line, test_build_index, test_cwd_slug):
         fn()
     if _fails:

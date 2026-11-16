@@ -93,11 +93,11 @@
     "hooks/brief-pretool.py": "0201c689cd358d7b6c70bd6f5918aed4b921e32f6bbd11d5bb1f378dc2770694",
     "hooks/hooks.json": "11b34e35726c1b07765216e99a3445e02388c8fc46b9f1f48f63ab34ecb9ab3a",
     "scripts/brief-agents.py": "3a52aee018ee615ad5608b79148fd4de2b9873b6c1561c547b40e21aa615210c",
-    "scripts/brief_agents_core.py": "35fc94a9ad0f9019cdd141e06a3b01441f6e6f1bd66f855545e62a101f8f73ae",
+    "scripts/brief_agents_core.py": "0ddf2a3e8f1e8d9ff5a490cb74bb31293780bad4a1f4e1f21b4d103dac235d45",
     "skills/brief-agents/SKILL.md": "2aa9f03832eddc30ec7a2e77d48ce0ab59306b842792b65b806069b7305f4dcd"
   },
   "schema": "haiggoh-portable-build/1",
-  "source_commit": "adeacf3d57b07b6a0b38730b40ad5e2d6793780f",
+  "source_commit": "8c4b774161fff656a352f38ef1f13585c8192732",
   "source_repo": "haiggoh/brief-agents",
   "transform_version": "1"
 }
