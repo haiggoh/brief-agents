@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.2.4] — 2026-11-16
+
+- (release notes go here)
+
 ## [0.2.3] — 2026-11-15
 
 ### Added — Phase 4 Wave B: committed portable package (COORDINATION C1/C2)
