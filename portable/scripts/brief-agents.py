@@ -4,13 +4,22 @@
 Developer note: this is the only place (besides the hook) that touches the filesystem for
 real; the scan and assembly logic lives in the fail-safe, unit-tested brief_agents_core
 module. The user-facing usage text is USAGE below (kept free of implementation prose)."""
+import json
 import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import brief_agents_core as core  # noqa: E402
 
-VERSION = "0.2.3"  # also in .claude-plugin/plugin.json and CHANGELOG.md
+
+def _version():
+    """Derived, never hardcoded: the manifest next to the package root is the single
+    source of truth (host: bin/../.claude-plugin/plugin.json; portable copy:
+    scripts/../.claude-plugin/plugin.json). A hardcoded VERSION constant drifted
+    on every bump (shipped 0.2.4 while printing 0.2.3)."""
+    here = os.path.dirname(os.path.abspath(__file__))
+    with open(os.path.join(here, "..", ".claude-plugin", "plugin.json"), encoding="utf-8") as f:
+        return json.load(f)["version"]
 
 USAGE = """Usage:
   brief-agents.py generate      Rebuild the agent briefing index from live inputs and
@@ -40,7 +49,7 @@ def main(argv):
         sys.stdout.write(USAGE)
         return 0
     if any(a in ("-V", "--version") for a in argv[1:]):
-        print(VERSION)
+        print(_version())
         return 0
     cmd = argv[1] if len(argv) > 1 else "generate"
     cwd = os.getcwd()

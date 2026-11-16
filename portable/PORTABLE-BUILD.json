@@ -88,16 +88,16 @@
     }
   ],
   "files": {
-    ".claude-plugin/plugin.json": "d168b2212d62ef5949932513b98cb0e5aa4dc2f35741030eb9bc281d4b58f590",
+    ".claude-plugin/plugin.json": "1c1233d9f841a44cc24b9625289a8498f24f34816acc26dac0e8a86ff1abc468",
     "hooks/brief-check.py": "4cb48f78af59faf4cb38aade92c4cd62c11562b73c615fd5db14b9454f22dadb",
     "hooks/brief-pretool.py": "0201c689cd358d7b6c70bd6f5918aed4b921e32f6bbd11d5bb1f378dc2770694",
     "hooks/hooks.json": "11b34e35726c1b07765216e99a3445e02388c8fc46b9f1f48f63ab34ecb9ab3a",
-    "scripts/brief-agents.py": "3a52aee018ee615ad5608b79148fd4de2b9873b6c1561c547b40e21aa615210c",
+    "scripts/brief-agents.py": "ce4a10d87c03a3392feb85657a8d6387b500843a53c5fe1f219930a38931a2b7",
     "scripts/brief_agents_core.py": "0ddf2a3e8f1e8d9ff5a490cb74bb31293780bad4a1f4e1f21b4d103dac235d45",
     "skills/brief-agents/SKILL.md": "2aa9f03832eddc30ec7a2e77d48ce0ab59306b842792b65b806069b7305f4dcd"
   },
   "schema": "haiggoh-portable-build/1",
-  "source_commit": "8c4b774161fff656a352f38ef1f13585c8192732",
+  "source_commit": "f1d565fe1050b4da02742ea98f0c5eb9bc98647b",
   "source_repo": "haiggoh/brief-agents",
   "transform_version": "1"
 }
