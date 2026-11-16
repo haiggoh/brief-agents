@@ -8,6 +8,6 @@
   "roadmap": "",
   "assets": "",
   "refresh_plugin": "brief-agents",
-  "test_cmd": "{ echo 'python3 tests/test_core.py'; echo 'bash tests/test_hook.sh'; echo 'bash tests/test_pretool.sh'; } | parallel --will-cite -j 3 ; echo 'PY=\"$(command -v python3)\"; \"$PY\" -c \"import pytest\" 2>/dev/null || PY=\"$HOME/.local/pipx/venvs/pytest/bin/python\"; \"$PY\" -m pytest -q tests/test_cli.py tests/test_portable.py'",
+  "test_cmd": "{ echo 'python3 tests/test_core.py'; echo 'bash tests/test_hook.sh'; echo 'bash tests/test_pretool.sh'; } | parallel --will-cite -j 3 ; PY=\"$(command -v python3)\"; \"$PY\" -c \"import pytest\" 2>/dev/null || PY=\"$HOME/.local/pipx/venvs/pytest/bin/python\"; \"$PY\" -m pytest -q tests/test_cli.py tests/test_portable.py",
   "require_default_branch_checkout": true
 }

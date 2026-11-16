@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.2.7] — 2026-11-16
+
+### Fixed — the ship gate never ran pytest: test_cmd quoted the invocation inside echo '...'
+
+- The test_cmd ended in `echo 'PY=...; "$PY" -m pytest ...'`, so the gate PRINTED the suite
+  command instead of running it (reproduced: --test-only on the v0.2.4 tag reported pass on a
+  tree where pytest fails 4 tests). The pytest line is now unquoted and actually executes;
+  verified by running the exact test_cmd string (rc=0, '13 passed'). run-to-completion 1.6.2
+  now also refuses any test_cmd with a quoted interpreter call at the unpiped tail.
+
 ## [0.2.6] — 2026-11-16
 
 ### Docs — backfilled the 0.2.4/0.2.5 release notes
